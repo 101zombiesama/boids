@@ -1,16 +1,7 @@
 var canvasMain = document.getElementById('canvasMain');
 
-canvasMain.width = 600;
-canvasMain.height = 600;
-
-var ctxMain = canvasMain.getContext('2d');
-
-const particles = [];
-
-for(let i=0; i<5; i++) {
-    const particle = new Particle(new Vec2(_.random(20, canvasMain.width, true), 0), 1, new Vec2(0, _.random(0.5, 2.0)), true, _.random(10, 50));
-    particles.push(particle);
-}
+canvasMain.width = window.innerWidth;
+canvasMain.height = window.innerHeight;
 
 var mouseX = null;
 var mouseY = null;
@@ -18,40 +9,36 @@ var mouseY = null;
 canvasMain.addEventListener('mousemove', e => {
     mouseX = e.clientX;
     mouseY = e.clientY;
-})
+});
 
-const mouseParticle = new Particle(new Vec2(300, 300), 1, new Vec2(0,0), true, 100);
+var fpsCounter = document.getElementById('fps');
 
-var ray = new Ray(new Vec2(0, 300), new Vec2(1, 0));
+var ctxMain = canvasMain.getContext('2d');
+
+const boidSystem = new BoidSystem(canvasMain, 100, 20, 30, 2, 3.5, 0.2, 'black');
+boidSystem.create();
 
 
 function animate() {
+    // for performance analysis
+    const t0 = performance.now();
+
     requestAnimationFrame(animate);
 
     ctxMain.clearRect(0, 0, canvasMain.width, canvasMain.height);    
 
-    mouseParticle.location.x = mouseX;
-    mouseParticle.location.y = mouseY;
-    
-    for (let p of particles) {
-        if (p.location.y > canvasMain.height) p.location.y = 0;
-        p.update();
-        p.render(ctxMain);
+    boidSystem.update(ctxMain);
+    // boidSystem2.render(ctxMain);
+
+
+    const t1 = performance.now();
+    const fps = 1/(t1-t0)*1000;
+    var fpsContent = fps;
+    if (fps > 120) {
+        fpsContent = `120+`
     }
-
-    mouseParticle.update();
-    mouseParticle.render(ctxMain);
-
-    ray.render(ctxMain);
-
-    const intersections = ray.cast([...particles, mouseParticle]);
-
-    for (let intersection of intersections) {
-        ctxMain.beginPath();
-        ctxMain.arc(intersection.point.x, intersection.point.y, 10, 0, 2*Math.PI);
-        ctxMain.fill();
-    }
+    fpsCounter.innerHTML = ` fps: ${fpsContent}`;
 
 }
 
-animate()
+animate();
